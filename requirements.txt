@@ -1,13 +1,13 @@
-# 先声明这些基础依赖
+# 基础依赖
 markdown-it-py==2.2.0
 rich==13.7.0
 Pygments==2.15.1
 mdurl==0.1.2
 
-# 原有其他依赖
+# 主依赖
 streamlit==1.24.0
 pandas==2.0.3
-numpy==1.24.3
+numpy==1.26.4  # 替换原1.24.3，确保兼容性
 xgboost==1.7.6
 shap==0.41.0
 matplotlib==3.7.2
