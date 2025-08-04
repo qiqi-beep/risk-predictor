@@ -29,6 +29,18 @@ st.markdown(
 # 加载模型和特征名称
 @st.cache_resource
 def load_model_and_features():
+    try:
+        # 添加文件存在性检查
+        if not os.path.exists("xgb_koa_frailty.pkl"):
+            raise FileNotFoundError("模型文件不存在")
+            
+        with open("xgb_koa_frailty.pkl", "rb") as f:
+            model = pickle.load(f)
+            
+        return model, feature_names
+    except Exception as e:
+        st.error(f"加载模型失败: {str(e)}")
+        raise
     model_path = "xgb_koa_frailty.pkl"          # ← 改成这样（只留文件名）
     feature_path = "feature_names.pkl"          # ← 改成这样
     
@@ -227,4 +239,5 @@ if submitted:
     """)
 # 页脚
 st.markdown("---")
+
 st.caption("©2025 KOA预测系统 | 仅供临床参考")
