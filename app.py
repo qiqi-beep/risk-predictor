@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 from matplotlib.colors import LinearSegmentedColormap
 import sys
 import platform
+import time
 # ✅ 紧急修复：NumPy 1.24+ 移除了 np.int
 import numpy as np
 if not hasattr(np, 'int'):
@@ -253,4 +254,5 @@ if submitted:
 # 页脚
 st.markdown("---")
 st.caption("©2025 KOA预测系统 | 仅供临床参考")
+
 
