@@ -8,7 +8,12 @@ import matplotlib.pyplot as plt
 from matplotlib.colors import LinearSegmentedColormap
 import sys
 import platform
-
+# ✅ 紧急修复：NumPy 1.24+ 移除了 np.int
+import numpy as np
+if not hasattr(np, 'int'):
+    np.int = np.int64
+    np.float = np.float64
+    np.bool = np.bool_
 # ✅ 第一步：必须是第一个 st 命令！
 st.set_page_config(page_title="KOA 患者衰弱风险预测", layout="centered")
 
@@ -248,3 +253,4 @@ if submitted:
 # 页脚
 st.markdown("---")
 st.caption("©2025 KOA预测系统 | 仅供临床参考")
+
