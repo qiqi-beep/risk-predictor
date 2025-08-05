@@ -1,11 +1,24 @@
-# 核心依赖
-python==3.9.13  # 在runtime.txt中指定
-numpy==1.23.5
+# 核心框架
+streamlit==1.29.0
+
+# 数据处理
 pandas==1.5.3
-scikit-learn==1.2.2
+numpy==1.23.5
+
+# 机器学习
 xgboost==1.7.6
+scikit-learn==1.2.2
 shap==0.41.0
 
-# 其他依赖
-streamlit==1.24.0
+# 可视化
 matplotlib==3.7.2
+
+# 辅助工具
+markdown-it-py==2.2.0
+rich==13.7.0
+Pygments==2.15.1
+mdurl==0.1.2
+
+# 系统
+protobuf==3.20.3  # 避免某些Google包冲突
+
