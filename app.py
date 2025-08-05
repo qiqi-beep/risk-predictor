@@ -141,7 +141,7 @@ if submitted:
             st.write("- 保持健康生活方式")
             st.write("- 预防性健康指导")
 
-        # SHAP可视化：彻底解决 "CysC=1.0=1.0" 问题
+        # SHAP可视化（使用新式 shap.plots.force，避免双等号问题）
         try:
             # 获取 SHAP 值
             shap_values = explainer.shap_values(dmatrix)
@@ -156,7 +156,7 @@ if submitted:
             else:
                 shap_value = shap_values[0]
 
-            # ✅ 1. 构建完全可读的 feature_names（不依赖 features 值）
+            # ✅ 特征名称映射：直接定义为 "特征=值" 格式
             feature_names_mapping = {
                 'age': f'Age={int(age)}',
                 'bmi2015': f'BMI={bmi:.1f}',
@@ -178,33 +178,30 @@ if submitted:
                 'smoking': '吸烟: 是' if smoking == "是" else '吸烟: 否'
             }
 
-            # ✅ 2. 构造“空”特征值（全是空字符串），防止 SHAP 显示原始数值
-            fake_features = pd.Series([""] * len(input_df.columns), index=input_df.columns)
+            # 构建显示用的特征名列表（跳过空字符串）
+            display_features = input_df.iloc[0].copy()
+            display_feature_names = []
+            for col in input_df.columns:
+                mapped_name = feature_names_mapping.get(col, col)
+                if mapped_name:  # 只保留非空的
+                    display_feature_names.append(mapped_name)
+                else:
+                    display_feature_names.append("")  # 占位，保持对齐
 
-            # ✅ 3. 只保留非空的 feature_name（避免显示空行）
-            display_feature_names = [
-                feature_names_mapping.get(col, col)
-                for col in input_df.columns
-                if feature_names_mapping.get(col, "") != ""
-            ]
-            shap_value_filtered = [
-                shap_value[i]
-                for i, col in enumerate(input_df.columns)
-                if feature_names_mapping.get(col, "") != ""
-            ]
+            st.subheader(f"🧠 决策依据分析（{'衰弱' if pred_label == 1 else '非衰弱'}类）")
 
-            # ✅ 4. 使用 shap.plots.force，传入 fake_features 阻止值显示
-            shap.plots.force(
+            # ✅ 使用新式 shap.plots.force（不会显示 == value）
+            shap_plot = shap.plots.force(
                 base_value=expected_value,
-                shap_values=np.array(shap_value_filtered),
-                features=fake_features,
+                shap_values=shap_value,
+                features=display_features,
                 feature_names=display_feature_names,
                 out_names="衰弱概率",
                 matplotlib=True,
                 show=False
             )
 
-            # ✅ 5. 保存并显示图像
+            # 保存为图像并显示
             with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as tmpfile:
                 plt.savefig(tmpfile.name, bbox_inches='tight', dpi=300, facecolor='white', pad_inches=0.1)
                 st.image(tmpfile.name, use_column_width=True)
@@ -223,6 +220,7 @@ if submitted:
 # ✅ 页脚
 st.markdown("---")
 st.caption("©2025 KOA预测系统 | 仅供临床参考")
+
 
 
 
