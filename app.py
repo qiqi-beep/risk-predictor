@@ -10,6 +10,19 @@ import sys
 import platform
 import time
 
+# 临时调试：检查是否能导入 xgboost
+try:
+    import xgboost as xgb
+    st.write("✅ xgboost 版本：", xgb.__version__)
+except Exception as e:
+    st.write("❌ xgboost 导入失败：", str(e))
+
+# 再检查 numpy
+try:
+    import numpy as np
+    st.write("✅ numpy 版本：", np.__version__)
+except Exception as e:
+    st.write("❌ numpy 导入失败：", str(e))
 # ✅ 第一步：设置页面配置（必须是第一个 st 命令！）
 st.set_page_config(page_title="KOA 患者衰弱风险预测", layout="centered")
 
@@ -243,4 +256,5 @@ if submitted:
 # 页脚
 st.markdown("---")
 st.caption("©2025 KOA预测系统 | 仅供临床参考")
+
 
