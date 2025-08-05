@@ -29,18 +29,6 @@ st.markdown(
 # 加载模型和特征名称
 @st.cache_resource
 def load_model_and_features():
-    try:
-        # 添加文件存在性检查
-        if not os.path.exists("xgb_koa_frailty.pkl"):
-            raise FileNotFoundError("模型文件不存在")
-            
-        with open("xgb_koa_frailty.pkl", "rb") as f:
-            model = pickle.load(f)
-            
-        return model, feature_names
-    except Exception as e:
-        st.error(f"加载模型失败: {str(e)}")
-        raise
     model_path = "xgb_koa_frailty.pkl"          # ← 改成这样（只留文件名）
     feature_path = "feature_names.pkl"          # ← 改成这样
     
@@ -110,7 +98,10 @@ with st.form("patient_input_form"):
     wbc = st.number_input("输入您的wbc（白细胞，10^9/L）", min_value=0.0, max_value=50.0, value=6.0, step=0.1)
     
     submitted = st.form_submit_button("开始评估")
-
+if submitted:
+    with st.spinner('正在计算...'):
+        time.sleep(0.5)  # 添加短暂延迟避免渲染冲突
+        st.experimental_rerun()  # 强制清理渲染状态
 # 处理输入数据并预测
 if submitted:
     # 将输入转换为模型需要的格式
@@ -213,24 +204,29 @@ if submitted:
         # 创建SHAP决策图（放大尺寸）
         st.subheader(f"🧠 决策依据分析（{'衰弱' if pred_label == 1 else '非衰弱'}类）")
         plt.figure(figsize=(14, 4))  # 放大图形尺寸
-        shap.force_plot(
-            base_value=expected_value,
-            shap_values=shap_value,
-            features=input_df.iloc[0],
-            feature_names=[feature_names_mapping.get(f, f) for f in input_df.columns],
-            matplotlib=True,
-            show=False,
-            plot_cmap="RdBu",
-            text_rotation=15,
-            contribution_threshold=0.05
-        )
-        plt.tight_layout()
-        st.pyplot(plt, bbox_inches='tight')
-        plt.close()
-            
-    except Exception as e:
-        st.error(f"SHAP分析错误: {str(e)}")
+       try:
+    plt.close('all')  # 清除所有现有图形
     
+    # 创建新的figure对象
+    fig, ax = plt.subplots(figsize=(14, 4))
+    
+    # 使用feature_perturbation避免警告
+    shap.force_plot(
+        base_value=expected_value,
+        shap_values=shap_value,
+        features=input_df.iloc[0],
+        feature_names=[feature_names_mapping.get(f, f) for f in input_df.columns],
+        matplotlib=True,
+        show=False,
+        plot_cmap="RdBu"
+    )
+    
+    # 显式传递figure对象
+    st.pyplot(fig, clear_figure=True)
+    plt.close(fig)
+    
+except Exception as e:
+    st.error(f"可视化渲染失败，请刷新页面重试。技术细节: {str(e)}")    
     # 图例说明
     st.markdown("""
     **图例说明:**
@@ -239,5 +235,4 @@ if submitted:
     """)
 # 页脚
 st.markdown("---")
-
 st.caption("©2025 KOA预测系统 | 仅供临床参考")
