@@ -8,11 +8,14 @@ import matplotlib.pyplot as plt
 from matplotlib.colors import LinearSegmentedColormap
 import sys
 import platform
+import time  # Added for the delay function
+
 st.write(f"""
 Python版本: {sys.version.split()[0]}\n
 系统环境: {platform.platform()}\n
 numpy版本: {np.__version__}
 """)
+
 # 页面设置
 st.set_page_config(page_title="KOA 患者衰弱风险预测", layout="centered")
 st.title("🩺 膝骨关节炎患者衰弱风险预测系统")
@@ -35,8 +38,8 @@ st.markdown(
 # 加载模型和特征名称
 @st.cache_resource
 def load_model_and_features():
-    model_path = "xgb_koa_frailty.pkl"          # ← 改成这样（只留文件名）
-    feature_path = "feature_names.pkl"          # ← 改成这样
+    model_path = "xgb_koa_frailty.pkl"
+    feature_path = "feature_names.pkl"
     
     with open(model_path, 'rb') as f:
         model = pickle.load(f)
@@ -104,10 +107,12 @@ with st.form("patient_input_form"):
     wbc = st.number_input("输入您的wbc（白细胞，10^9/L）", min_value=0.0, max_value=50.0, value=6.0, step=0.1)
     
     submitted = st.form_submit_button("开始评估")
+
 if submitted:
     with st.spinner('正在计算...'):
         time.sleep(0.5)  # 添加短暂延迟避免渲染冲突
         st.experimental_rerun()  # 强制清理渲染状态
+
 # 处理输入数据并预测
 if submitted:
     # 将输入转换为模型需要的格式
@@ -151,28 +156,24 @@ if submitted:
     # 显示预测结果
     st.success(f"📊 预测结果: 患者衰弱概率为 {frail_prob*100:.2f}%")
     
-    # 调试信息（正式发布时可注释掉）
-    # st.write("调试信息：")
-    # st.write(f"模型原始预测概率分布: {prediction}")
-    
     # 调整后的风险等级提示
-    if frail_prob > 0.8:  # 高风险阈值提高到0.8
+    if frail_prob > 0.8:
         st.error("""⚠️ **高风险：建议立即临床干预**""")
         st.write("- 每周随访监测")
         st.write("- 必须物理治疗干预")
         st.write("- 全面评估并发症")
-    elif frail_prob > 0.3:  # 中风险范围扩大
+    elif frail_prob > 0.3:
         st.warning("""⚠️ **中风险：建议定期监测**""")
         st.write("- 每3-6个月评估一次")
         st.write("- 建议适度运动计划")
         st.write("- 基础营养评估")
-    else:  # 低风险阈值降低
+    else:
         st.success("""✅ **低风险：建议常规健康管理**""")
         st.write("- 每年体检一次")
         st.write("- 保持健康生活方式")
         st.write("- 预防性健康指导")
     
-    # ==================== SHAP分析可视化 ====================
+    # SHAP分析可视化
     try:
         # 计算SHAP值
         shap_values = explainer.shap_values(input_df)
@@ -185,7 +186,7 @@ if submitted:
             shap_value = shap_values[0]
             expected_value = explainer.expected_value
         
-        # 创建特征名称映射（按照您的要求修改）
+        # 创建特征名称映射
         feature_names_mapping = {
             'age': f'Age={int(age)}',
             'bmi2015': f'BMI={bmi:.1f}',
@@ -207,39 +208,34 @@ if submitted:
             'smoking': f'Smoke={"是" if smoking=="是" else "否"}'
         }
 
-        # 创建SHAP决策图（放大尺寸）
+        # 创建SHAP决策图
         st.subheader(f"🧠 决策依据分析（{'衰弱' if pred_label == 1 else '非衰弱'}类）")
-        plt.figure(figsize=(14, 4))  # 放大图形尺寸
-       try:
-    plt.close('all')  # 清除所有现有图形
+        plt.close('all')  # 清除所有现有图形
+        fig = plt.figure(figsize=(14, 4))
+        
+        shap.force_plot(
+            base_value=expected_value,
+            shap_values=shap_value,
+            features=input_df.iloc[0],
+            feature_names=[feature_names_mapping.get(f, f) for f in input_df.columns],
+            matplotlib=True,
+            show=False,
+            plot_cmap="RdBu"
+        )
+        
+        st.pyplot(fig, clear_figure=True)
+        plt.close(fig)
+        
+    except Exception as e:
+        st.error(f"可视化渲染失败，请刷新页面重试。技术细节: {str(e)}")
     
-    # 创建新的figure对象
-    fig, ax = plt.subplots(figsize=(14, 4))
-    
-    # 使用feature_perturbation避免警告
-    shap.force_plot(
-        base_value=expected_value,
-        shap_values=shap_value,
-        features=input_df.iloc[0],
-        feature_names=[feature_names_mapping.get(f, f) for f in input_df.columns],
-        matplotlib=True,
-        show=False,
-        plot_cmap="RdBu"
-    )
-    
-    # 显式传递figure对象
-    st.pyplot(fig, clear_figure=True)
-    plt.close(fig)
-    
-except Exception as e:
-    st.error(f"可视化渲染失败，请刷新页面重试。技术细节: {str(e)}")    
     # 图例说明
     st.markdown("""
     **图例说明:**
     - 🔴 **红色**：增加衰弱风险的特征  
     - 🟢 **绿色**：降低衰弱风险的特征  
     """)
+
 # 页脚
 st.markdown("---")
 st.caption("©2025 KOA预测系统 | 仅供临床参考")
-
