@@ -37,23 +37,27 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-# 加载模型和特征名称
+# ✅ 加载模型和特征名称（关键修复在这里！）
 @st.cache_resource
 def load_model_and_features():
+    # ✅ 模型路径：使用 XGBoost 原生 JSON 格式
     model_path = "xgb_model.json"
     feature_path = "feature_names.pkl"
     
-    with open(model_path, 'rb') as f:
-        model = pickle.load(f)
+    # ✅ 1. 使用 XGBoost 原生方式加载模型（不再用 pickle！）
+    model = xgb.Booster()
+    model.load_model(model_path)  # ✅ 正确方式加载 .json
     
+    # ✅ 2. 用 pickle 加载特征名称（这个小文件一般没问题）
     with open(feature_path, 'rb') as f:
         feature_names = pickle.load(f)
     
     return model, feature_names
 
+# ✅ 加载模型和特征
 model, feature_names = load_model_and_features()
 
-# 初始化SHAP解释器
+# ✅ 初始化SHAP解释器
 @st.cache_resource
 def create_explainer(_model):
     explainer = shap.TreeExplainer(_model)
@@ -150,9 +154,11 @@ if submitted:
     # 重新排序列
     input_df = input_df[feature_names]
     
-    # 进行预测
-    prediction = model.predict_proba(input_df)[0]
-    frail_prob = prediction[1]
+    # ✅ 进行预测：注意 model 是 Booster，没有 predict_proba
+    # 我们用 predict + sigmoid 模拟 predict_proba
+    dmatrix = xgb.DMatrix(input_df)
+    pred_logodds = model.predict(dmatrix)[0]
+    frail_prob = 1 / (1 + np.exp(-pred_logodds))  # sigmoid 转概率
     pred_label = 1 if frail_prob > 0.5 else 0
     
     # 显示预测结果
@@ -177,21 +183,22 @@ if submitted:
     
     # SHAP分析可视化
     try:
-        # 计算SHAP值
-        shap_values = explainer.shap_values(input_df)
+        # ✅ 计算SHAP值（注意：explainer 接收 DMatrix 或 numpy）
+        shap_values = explainer.shap_values(dmatrix)
         
         # 获取当前类别的SHAP值
+        expected_value = explainer.expected_value
+        if isinstance(expected_value, np.ndarray):
+            expected_value = expected_value[1] if pred_label == 1 else expected_value[0]
         if isinstance(shap_values, list):
             shap_value = shap_values[1][0] if pred_label == 1 else shap_values[0][0]
-            expected_value = explainer.expected_value[1] if pred_label == 1 else explainer.expected_value[0]
         else:
             shap_value = shap_values[0]
-            expected_value = explainer.expected_value
         
-        # 创建特征名称映射
+        # 创建特征名称映射（可简化）
         feature_names_mapping = {
             'age': f'Age={int(age)}',
-            'bmi2015': f'BMI={bmi:.1f}',
+            'bmi': f'BMI={bmi:.1f}',
             'bl_wbc': f'Wbc={wbc:.1f}',
             'bl_crea': f'Crea={crea:.1f}',
             'bl_plt': f'Plt={int(platelet)}',
@@ -212,7 +219,7 @@ if submitted:
 
         # 创建SHAP决策图
         st.subheader(f"🧠 决策依据分析（{'衰弱' if pred_label == 1 else '非衰弱'}类）")
-        plt.close('all')  # 清除所有现有图形
+        plt.close('all')
         fig = plt.figure(figsize=(14, 4))
         
         shap.force_plot(
@@ -241,7 +248,3 @@ if submitted:
 # 页脚
 st.markdown("---")
 st.caption("©2025 KOA预测系统 | 仅供临床参考")
-
-
-
-
