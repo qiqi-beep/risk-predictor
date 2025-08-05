@@ -48,8 +48,8 @@ st.markdown(
 @st.cache_resource
 def load_model_and_features():
     model = xgb.Booster()
-    model.load_model("xgb_model2.json")
-    with open("feature_names2.pkl", 'rb') as f:
+    model.load_model("xgb_model.json")
+    with open("feature_names.pkl", 'rb') as f:
         feature_names = pickle.load(f)
     return model, feature_names
 
@@ -220,6 +220,7 @@ if submitted:
 # ✅ 页脚
 st.markdown("---")
 st.caption("©2025 KOA预测系统 | 仅供临床参考")
+
 
 
 
