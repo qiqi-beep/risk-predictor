@@ -70,11 +70,11 @@ def create_explainer(_model):
 
 explainer = create_explainer(model)
 
+
 # 创建输入表单
 with st.form("patient_input_form"):
     st.markdown("---")
     st.subheader("📋 请填写以下信息") 
-    
     # 性别
     gender = st.radio("您的性别", ["女", "男"])
     
@@ -119,10 +119,9 @@ with st.form("patient_input_form"):
     
     submitted = st.form_submit_button("开始评估")
 
-
+# ✅ 保留并确保执行下面这段（你已经有，但要确保在 submitted 后直接运行）
 if submitted:
     with st.spinner('正在计算...'):
-        st.experimental_rerun()
 # 处理输入数据并预测
 if submitted:
     # 将输入转换为模型需要的格式
@@ -252,6 +251,7 @@ if submitted:
 # 页脚
 st.markdown("---")
 st.caption("©2025 KOA预测系统 | 仅供临床参考")
+
 
 
 
