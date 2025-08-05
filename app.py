@@ -175,17 +175,17 @@ if submitted:
 
             st.subheader(f"🧠 决策依据分析（{'衰弱' if pred_label == 1 else '非衰弱'}类）")
             plt.close('all')
-            fig = plt.figure(figsize=(14, 4))
-            shap.force_plot(
-                base_value=expected_value,
-                shap_values=shap_value,
-                features=input_df.iloc[0],
-                feature_names=[feature_names_mapping.get(f, f) for f in input_df.columns],
-                matplotlib=True,
-                show=False,
-                plot_cmap="RdBu"
-            )
-            st.pyplot(fig)
+fig = plt.figure(figsize=(18, 6), dpi=80)
+shap.force_plot(
+    base_value=expected_value,
+    shap_values=shap_value,
+    features=input_df.iloc[0],
+    feature_names=[feature_names_mapping.get(f, f) for f in input_df.columns],
+    matplotlib=True,
+    show=False,
+    plot_cmap="RdBu"
+)
+st.pyplot(fig)
             plt.close(fig)
 
         except Exception as e:
@@ -200,3 +200,4 @@ if submitted:
 # ✅ 页脚
 st.markdown("---")
 st.caption("©2025 KOA预测系统 | 仅供临床参考")
+
