@@ -8,33 +8,18 @@ import matplotlib.pyplot as plt
 from matplotlib.colors import LinearSegmentedColormap
 import sys
 import platform
-import time
 
-# 临时调试：检查是否能导入 xgboost
-try:
-    import xgboost as xgb
-    st.write("✅ xgboost 版本：", xgb.__version__)
-except Exception as e:
-    st.write("❌ xgboost 导入失败：", str(e))
-
-# 再检查 numpy
-try:
-    import numpy as np
-    st.write("✅ numpy 版本：", np.__version__)
-except Exception as e:
-    st.write("❌ numpy 导入失败：", str(e))
-# ✅ 第一步：设置页面配置（必须是第一个 st 命令！）
+# ✅ 第一步：必须是第一个 st 命令！
 st.set_page_config(page_title="KOA 患者衰弱风险预测", layout="centered")
 
-# ✅ 第二步：再写调试信息（现在可以了！）
+# ✅ 第二步：现在可以安全地使用 st.write 了
 with st.expander("🔧 调试信息", expanded=False):
-    st.write(f"""
-    - **Python版本**: `{sys.version.split()[0]}`
-    - **系统环境**: `{platform.platform()}`
-    - **numpy版本**: `{np.__version__}`
-    """)
+    st.write(f"**Python版本**: `{sys.version.split()[0]}`")
+    st.write(f"**系统环境**: `{platform.platform()}`")
+    st.write(f"**numpy版本**: `{np.__version__}`")
+    st.write(f"**xgboost版本**: `{xgb.__version__}`")
 
-# ✅ 第三步：继续你的正常逻辑
+# ✅ 第三步：继续你的主逻辑
 st.title("🩺 膝骨关节炎患者衰弱风险预测系统")
 st.markdown("根据输入的临床特征，预测膝关节骨关节炎（KOA）患者发生衰弱（Frailty）的概率，并可视化决策依据。")
 
@@ -256,5 +241,6 @@ if submitted:
 # 页脚
 st.markdown("---")
 st.caption("©2025 KOA预测系统 | 仅供临床参考")
+
 
 
