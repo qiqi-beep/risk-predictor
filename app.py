@@ -6,7 +6,13 @@ import xgboost as xgb
 import shap
 import matplotlib.pyplot as plt
 from matplotlib.colors import LinearSegmentedColormap
-
+import sys
+import platform
+st.write(f"""
+Python版本: {sys.version.split()[0]}\n
+系统环境: {platform.platform()}\n
+numpy版本: {np.__version__}
+""")
 # 页面设置
 st.set_page_config(page_title="KOA 患者衰弱风险预测", layout="centered")
 st.title("🩺 膝骨关节炎患者衰弱风险预测系统")
@@ -236,3 +242,4 @@ except Exception as e:
 # 页脚
 st.markdown("---")
 st.caption("©2025 KOA预测系统 | 仅供临床参考")
+
