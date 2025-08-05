@@ -20,11 +20,11 @@ if not hasattr(np, 'int'):
 st.set_page_config(page_title="KOA 患者衰弱风险预测", layout="centered")
 
 # ✅ 调试信息
-with st.expander("🔧 调试信息", expanded=False):
-    st.write(f"**Python版本**: `{sys.version.split()[0]}`")
-    st.write(f"**系统环境**: `{platform.platform()}`")
-    st.write(f"**numpy版本**: `{np.__version__}`")
-    st.write(f"**xgboost版本**: `{xgb.__version__}`")
+# with st.expander("🔧 调试信息", expanded=False):
+#    st.write(f"**Python版本**: `{sys.version.split()[0]}`")
+#    st.write(f"**系统环境**: `{platform.platform()}`")
+#    st.write(f"**numpy版本**: `{np.__version__}`")
+#    st.write(f"**xgboost版本**: `{xgb.__version__}`")
 
 # ✅ 主标题
 st.title("🩺 膝骨关节炎患者衰弱风险预测系统")
@@ -141,18 +141,22 @@ if submitted:
             st.write("- 保持健康生活方式")
             st.write("- 预防性健康指导")
 
-        # SHAP可视化（使用临时文件保存图像，避免Streamlit中force_plot空白问题）
+        # SHAP可视化（使用新式 shap.plots.force，避免双等号问题）
         try:
+            # 获取 SHAP 值
             shap_values = explainer.shap_values(dmatrix)
             expected_value = explainer.expected_value
             if isinstance(expected_value, np.ndarray):
-                expected_value = expected_value[1] if pred_label == 1 else expected_value[0]
+                expected_value = expected_value[1]  # 二分类取正类基值
+            else:
+                expected_value = float(expected_value)
+
             if isinstance(shap_values, list):
-                shap_value = shap_values[1][0] if pred_label == 1 else shap_values[0][0]
+                shap_value = shap_values[1][0]  # 取正类 SHAP 值
             else:
                 shap_value = shap_values[0]
 
-            # ✅ 特征名称映射（必须缩进！）
+            # ✅ 特征名称映射：直接定义为 "特征=值" 格式
             feature_names_mapping = {
                 'age': f'Age={int(age)}',
                 'bmi2015': f'BMI={bmi:.1f}',
@@ -160,43 +164,48 @@ if submitted:
                 'bl_crea': f'Crea={crea:.1f}',
                 'bl_plt': f'Plt={platelet}',
                 'bl_cysc': f'CysC={cysc:.1f}',
-                'Complications_0': 'Complications=无' if complication == "没有" else 'Complications=有',
-                'Complications_1': 'Complications=有' if complication == "1个" else 'Complications=无',
-                'Complications_2': 'Complications=≥2' if complication == "至少2个" else 'Complications=无',
-                'FTSST': 'FTSST=≥12s' if sit_stand == "大于等于12s" else 'FTSST=<12s',
-                'Walking_speed': 'WalkSpeed=≥1m/s' if walk_speed == "大于等于1m/s" else 'WalkSpeed=<1m/s',
-                'fall': 'Fall=是' if fall == "是" else 'Fall=否',
-                'ADL': 'ADL=受限' if daily_activity == "有限制" else 'ADL=正常',
-                'gender': 'Gender=女' if gender == "女" else 'Gender=男',
-                'PA_high': 'PA=高' if activity == "高水平" else 'PA=中/低',
-                'PA_medium': 'PA=中' if activity == "中水平" else 'PA=高/低',
-                'PA_low': 'PA=低' if activity == "低水平" else 'PA=高/中',
-                'smoking': 'Smoke=是' if smoking == "是" else 'Smoke=否'
+                'Complications_0': '无并发症' if complication == "没有" else '',
+                'Complications_1': '有1个并发症' if complication == "1个" else '',
+                'Complications_2': '≥2个并发症' if complication == "至少2个" else '',
+                'FTSST': 'FTSST≥12s' if sit_stand == "大于等于12s" else 'FTSST<12s',
+                'Walking_speed': 'WalkSpeed≥1m/s' if walk_speed == "大于等于1m/s" else 'WalkSpeed<1m/s',
+                'fall': '跌倒史: 是' if fall == "yes" else '跌倒史: no',
+                'ADL': 'ADL受限' if daily_activity == "有限制" else 'ADL正常',
+                'gender': '性别: 女' if gender == "女" else '性别: 男',
+                'PA_high': '体力活动: 高' if activity == "高水平" else '',
+                'PA_medium': '体力活动: 中' if activity == "中水平" else '',
+                'PA_low': '体力活动: 低' if activity == "低水平" else '',
+                'smoking': '吸烟: 是' if smoking == "是" else '吸烟: 否'
             }
+
+            # 构建显示用的特征名列表（跳过空字符串）
+            display_features = input_df.iloc[0].copy()
+            display_feature_names = []
+            for col in input_df.columns:
+                mapped_name = feature_names_mapping.get(col, col)
+                if mapped_name:  # 只保留非空的
+                    display_feature_names.append(mapped_name)
+                else:
+                    display_feature_names.append("")  # 占位，保持对齐
 
             st.subheader(f"🧠 决策依据分析（{'衰弱' if pred_label == 1 else '非衰弱'}类）")
 
-            # 清除之前的图
-            plt.close('all')
-
-            # 创建 force_plot 图像
-            fig = shap.force_plot(
+            # ✅ 使用新式 shap.plots.force（不会显示 == value）
+            shap_plot = shap.plots.force(
                 base_value=expected_value,
                 shap_values=shap_value,
-                features=input_df.iloc[0],
-                feature_names=[feature_names_mapping.get(f, f) for f in input_df.columns],
+                features=display_features,
+                feature_names=display_feature_names,
+                out_names="衰弱概率",
                 matplotlib=True,
-                show=False,
-                plot_cmap="RdBu"
+                show=False
             )
 
-            # 使用 tempfile 保存图像
+            # 保存为图像并显示
             with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as tmpfile:
-                fig.savefig(tmpfile.name, bbox_inches='tight', dpi=300, facecolor='white')
+                plt.savefig(tmpfile.name, bbox_inches='tight', dpi=300, facecolor='white', pad_inches=0.1)
                 st.image(tmpfile.name, use_column_width=True)
-
-            # 清理 SHAP 图像
-            plt.close(fig)
+                plt.close()
 
         except Exception as e:
             st.error(f"SHAP可视化失败: {str(e)}")
@@ -211,6 +220,7 @@ if submitted:
 # ✅ 页脚
 st.markdown("---")
 st.caption("©2025 KOA预测系统 | 仅供临床参考")
+
 
 
 
