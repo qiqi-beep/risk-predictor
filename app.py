@@ -8,16 +8,20 @@ import matplotlib.pyplot as plt
 from matplotlib.colors import LinearSegmentedColormap
 import sys
 import platform
-import time  # Added for the delay function
+import time
 
-st.write(f"""
-Python版本: {sys.version.split()[0]}\n
-系统环境: {platform.platform()}\n
-numpy版本: {np.__version__}
-""")
-
-# 页面设置
+# ✅ 第一步：设置页面配置（必须是第一个 st 命令！）
 st.set_page_config(page_title="KOA 患者衰弱风险预测", layout="centered")
+
+# ✅ 第二步：再写调试信息（现在可以了！）
+with st.expander("🔧 调试信息", expanded=False):
+    st.write(f"""
+    - **Python版本**: `{sys.version.split()[0]}`
+    - **系统环境**: `{platform.platform()}`
+    - **numpy版本**: `{np.__version__}`
+    """)
+
+# ✅ 第三步：继续你的正常逻辑
 st.title("🩺 膝骨关节炎患者衰弱风险预测系统")
 st.markdown("根据输入的临床特征，预测膝关节骨关节炎（KOA）患者发生衰弱（Frailty）的概率，并可视化决策依据。")
 
@@ -239,3 +243,4 @@ if submitted:
 # 页脚
 st.markdown("---")
 st.caption("©2025 KOA预测系统 | 仅供临床参考")
+
