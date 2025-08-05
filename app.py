@@ -40,7 +40,7 @@ st.markdown(
 # 加载模型和特征名称
 @st.cache_resource
 def load_model_and_features():
-    model_path = "xgb_koa_frailty.pkl"
+    model_path = "xgb_model.json"
     feature_path = "feature_names.pkl"
     
     with open(model_path, 'rb') as f:
@@ -241,6 +241,7 @@ if submitted:
 # 页脚
 st.markdown("---")
 st.caption("©2025 KOA预测系统 | 仅供临床参考")
+
 
 
 
