@@ -152,28 +152,29 @@ if submitted:
             else:
                 shap_value = shap_values[0]
 
-            # 特征名称映射
-            feature_names_mapping = {
-                'age': f'Age={int(age)}',
-                'bmi': f'BMI={bmi:.1f}',
-                'bl_wbc': f'Wbc={wbc:.1f}',
-                'bl_crea': f'Crea={crea:.1f}',
-                'bl_plt': f'Plt={platelet}',
-                'bl_cysc': f'Cysc={cysc:.1f}',
-                'Complications_0': f'Complications={"无" if complication=="没有" else "有"}',
-                'Complications_1': f'Complications={"有" if complication=="1个" else "无"}',
-                'Complications_2': f'Complications={"≥2" if complication=="至少2个" else "无"}',
-                'FTSST': f'FTSST={"≥12s" if sit_stand=="大于等于12s" else "<12s"}',
-                'Walking_speed': f'Walk={"≥1m/s" if walk_speed=="大于等于1m/s" else "<1m/s"}',
-                'fall': f'Fall={"是" if fall=="是" else "否"}',
-                'ADL': f'ADL={"受限" if daily_activity=="有限制" else "正常"}',
-                'gender': f'Gender={"女" if gender=="女" else "男"}',
-                'PA_high': f'PA={"高" if activity=="高水平" else "中/低"}',
-                'PA_medium': f'PA={"中" if activity=="中水平" else "高/低"}',
-                'PA_low': f'PA={"低" if activity=="低水平" else "高/中"}',
-                'smoking': f'Smoke={"是" if smoking=="是" else "否"}'
-            }
+# 特征名称映射
+feature_names_mapping = {
+    'age': f'Age={int(age)}',
+    'bmi2015': f'BMI={bmi:.1f}',
+    'bl_wbc': f'WBC={wbc:.1f}',  # 修改为 WBC 更具可读性
+    'bl_crea': f'Crea={crea:.1f}',
+    'bl_plt': f'Plt={platelet}',
+    'bl_cysc': f'CysC={cysc:.1f}',  # 修改为 CysC 更具可读性
+    'Complications_0': 'Complications=无' if complication == "没有" else 'Complications=有',
+    'Complications_1': 'Complications=有' if complication == "1个" else 'Complications=无',
+    'Complications_2': 'Complications=≥2' if complication == "至少2个" else 'Complications=无',
+    'FTSST': 'FTSST=≥12s' if sit_stand == "大于等于12s" else 'FTSST=<12s',
+    'Walking_speed': 'WalkSpeed=≥1m/s' if walk_speed == "大于等于1m/s" else 'WalkSpeed=<1m/s',  # 修改为 WalkSpeed 更具可读性
+    'fall': 'Fall=是' if fall == "是" else 'Fall=否',
+    'ADL': 'ADL=受限' if daily_activity == "有限制" else 'ADL=正常',
+    'gender': 'Gender=女' if gender == "女" else 'Gender=男',
+    'PA_high': 'PA=高' if activity == "高水平" else 'PA=中/低',
+    'PA_medium': 'PA=中' if activity == "中水平" else 'PA=高/低',
+    'PA_low': 'PA=低' if activity == "低水平" else 'PA=高/中',
+    'smoking': 'Smoke=是' if smoking == "是" else 'Smoke=否'
+}
 
+# 其余代码保持不变...
             st.subheader(f"🧠 决策依据分析（{'衰弱' if pred_label == 1 else '非衰弱'}类）")
 
             # 清除之前的图
@@ -214,6 +215,7 @@ if submitted:
 # ✅ 页脚
 st.markdown("---")
 st.caption("©2025 KOA预测系统 | 仅供临床参考")
+
 
 
 
