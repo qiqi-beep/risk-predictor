@@ -140,7 +140,7 @@ if submitted:
             st.write("- 保持健康生活方式")
             st.write("- 预防性健康指导")
 
-        # SHAP可视化
+        # SHAP可视化（使用临时文件保存图像，避免Streamlit中force_plot空白问题）
         try:
             shap_values = explainer.shap_values(dmatrix)
             expected_value = explainer.expected_value
@@ -151,7 +151,7 @@ if submitted:
             else:
                 shap_value = shap_values[0]
 
-            # 特征名称映射（简化版）
+            # 特征名称映射
             feature_names_mapping = {
                 'age': f'Age={int(age)}',
                 'bmi': f'BMI={bmi:.1f}',
@@ -174,9 +174,12 @@ if submitted:
             }
 
             st.subheader(f"🧠 决策依据分析（{'衰弱' if pred_label == 1 else '非衰弱'}类）")
+
+            # 清除之前的图
             plt.close('all')
-            fig = plt.figure(figsize=(18, 6), dpi=80)
-            shap.force_plot(
+
+            # 创建 force_plot 图像
+            fig = shap.force_plot(
                 base_value=expected_value,
                 shap_values=shap_value,
                 features=input_df.iloc[0],
@@ -185,11 +188,21 @@ if submitted:
                 show=False,
                 plot_cmap="RdBu"
             )
-            st.pyplot(fig)
+
+            # 使用 tempfile 保存图像
+            import tempfile
+            with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as tmpfile:
+                # 保存图像
+                fig.savefig(tmpfile.name, bbox_inches='tight', dpi=300, facecolor='white')
+                # 在 Streamlit 中显示
+                st.image(tmpfile.name, use_column_width=True)
+
+            # 清理 SHAP 图像（避免内存泄漏）
             plt.close(fig)
 
         except Exception as e:
             st.error(f"SHAP可视化失败: {str(e)}")
+            st.warning("建议刷新页面或检查输入数据。")
 
         st.markdown("""
         **图例说明:**
@@ -200,5 +213,6 @@ if submitted:
 # ✅ 页脚
 st.markdown("---")
 st.caption("©2025 KOA预测系统 | 仅供临床参考")
+
 
 
