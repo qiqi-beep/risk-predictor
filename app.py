@@ -8,7 +8,6 @@ import matplotlib.pyplot as plt
 from matplotlib.colors import LinearSegmentedColormap
 import sys
 import platform
-import time
 # ✅ 紧急修复：NumPy 1.24+ 移除了 np.int
 import numpy as np
 if not hasattr(np, 'int'):
@@ -120,11 +119,10 @@ with st.form("patient_input_form"):
     
     submitted = st.form_submit_button("开始评估")
 
+
 if submitted:
     with st.spinner('正在计算...'):
-        time.sleep(0.5)  # 添加短暂延迟避免渲染冲突
-        st.experimental_rerun()  # 强制清理渲染状态
-
+        st.experimental_rerun()
 # 处理输入数据并预测
 if submitted:
     # 将输入转换为模型需要的格式
@@ -254,5 +252,6 @@ if submitted:
 # 页脚
 st.markdown("---")
 st.caption("©2025 KOA预测系统 | 仅供临床参考")
+
 
 
